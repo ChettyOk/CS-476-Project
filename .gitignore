@@ -1,0 +1,14 @@
+# Virtuelle Umgebung
+venv/
+ENV/
+
+# Python Cache
+__pycache__/
+*.pyc
+
+# Lokale Datenbank (damit sich eure Testdaten nicht überschreiben)
+*.sqlite3
+
+# IDEs / Editoren
+.vscode/
+.idea/
