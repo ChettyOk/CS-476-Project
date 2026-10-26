@@ -1,5 +1,8 @@
 from django.db import models
 import re
+import json
+import os
+import pypdf
 
 class Course(models.Model):
     course_code = models.CharField(max_length=10, unique=True)
@@ -27,10 +30,77 @@ class Course(models.Model):
         
         return cls.objects.create(course_code = course_code, course_name = course_name, course_faculty = course_faculty)
         
-            
+    FACULTIES = {
+        'CS': 'Faculty of Science',
+        'MATH': 'Faculty of Science',
+        'STAT': 'Faculty of Science',
+        'ACSC': 'Faculty of Science',
+        'BIOL': 'Faculty of Science',
+        'CHEM': 'Faculty of Science',
+        'PHYS': 'Faculty of Science',
+        'GEOL': 'Faculty of Science',
+        'ENEL': 'Faculty of Engineering',
+        'ENER': 'Faculty of Engineering',
+        'ENSE': 'Faculty of Engineering',
+        'ENGG': 'Faculty of Engineering',
+        'ENIN': 'Faculty of Engineering',
+        'ENPE': 'Faculty of Engineering',
+        'BUS': 'Faculty of Business',
+        'ADMN': 'Faculty of Business',
+        'PSYC': 'Faculty of Arts',
+        'ENGL': 'Faculty of Arts',
+        'HIST': 'Faculty of Arts',
+        'ECON': 'Faculty of Arts',
+        'SOC': 'Faculty of Arts',
+        'PHIL': 'Faculty of Arts',
+    }      
 
+
+    @classmethod
+    def getCoursesFromFile(cls, pdf_file):
+        file = pypdf.PdfReader(pdf_file)
+        name_pattern = re.compile(r'^([A-Z]{2,4}\s\d{3})\s*-\s*(.+)$')
         
+        num_of_created = 0
+        num_of_skipped = 0
+        courses_seen_in_pdf = set()
+
+        for page in file.pages:
+            page_text = page.extract_text() or ''
+            for line in page_text.split('\n'):
+                course_found = name_pattern.match(line.strip())
+                if course_found:
+                    course_code = course_found.group(1).strip().upper()
+                    course_name = course_found.group(2).strip()
+
+                    if course_code in courses_seen_in_pdf:
+                        continue
+                    courses_seen_in_pdf.add(course_code)
+                    
+                    if Course.check_course_code_spelling(course_code):
+                        course_prefix = course_code.split()[0]
+                        course_faculty = cls.FACULTIES.get(course_prefix, 'other')
+
+                        course, course_new = Course.objects.get_or_create(
+                            course_code = course_code,
+                            defaults={
+                                'course_name': course_name,
+                                'course_faculty': course_faculty,
+                            }
+                        )
+                        if course_new:
+                            num_of_created += 1
+                        else:
+                            num_of_skipped += 1
+
+        return num_of_created, num_of_skipped
+                        
+                        
+                        
+
+   
         
+    
 
 
 # User
