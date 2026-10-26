@@ -1,18 +1,37 @@
 from django.db import models
+import re
 
-# Create your models here.
-# Variables / classes / intern functions
+class Course(models.Model):
+    course_code = models.CharField(max_length=10, unique=True)
+    course_name = models.CharField(max_length=200)
+    course_faculty = models.CharField(max_length=50)
 
-# ==========================================
-# VON MIR (DJANGO DEFAULTS & ERLÄUTERUNGEN)
-# ==========================================
-# Hier unten beginnt exakt der Text aus eurem PDF. 
-# Ich habe meine hinzugefügten Wörter wie "Variables:" 
-# oder "Functions:" sowie die "class"-Schlüsselwörter entfernt.
+    def __str__(self):
+        return f"{self.course_code} - {self.course_name}"
 
-# ==========================================
-# VON EUCH (AUS DEM PDF)
-# ==========================================
+    @staticmethod
+    def check_course_code_spelling(course_code):
+        if not course_code or not isinstance(course_code, str):
+            return False
+        course_code = course_code.strip().upper()
+        pattern = r"^[A-Z]{2,4}\s?\d{3}$"
+        return bool(re.match(pattern, course_code))
+
+    @classmethod
+    def createCourse(cls, course_code, course_name, course_faculty):
+
+        if not cls.check_course_code_spelling(course_code):
+            raise ValueError(f'invalid course code')
+
+        course_code = course_code.strip().upper()
+        
+        return cls.objects.create(course_code = course_code, course_name = course_name, course_faculty = course_faculty)
+        
+            
+
+        
+        
+
 
 # User
 #     ID
