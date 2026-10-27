@@ -4,11 +4,14 @@ import re
 import json
 import os
 import pypdf
+from .constants import FACULTIES
 
 class Course(models.Model):
     course_code = models.CharField(max_length=10, unique=True)
     course_name = models.CharField(max_length=200)
     course_faculty = models.CharField(max_length=50)
+
+    FACULTIES = FACULTIES
 
     def __str__(self):
         return f"{self.course_code} - {self.course_name}"
@@ -28,37 +31,10 @@ class Course(models.Model):
             raise ValueError(f'invalid course code')
 
         course_code = course_code.strip().upper()
-        
         return cls.objects.create(course_code = course_code, course_name = course_name, course_faculty = course_faculty)
-        
-    FACULTIES = {
-        'CS': 'Faculty of Science',
-        'MATH': 'Faculty of Science',
-        'STAT': 'Faculty of Science',
-        'ACSC': 'Faculty of Science',
-        'BIOL': 'Faculty of Science',
-        'CHEM': 'Faculty of Science',
-        'PHYS': 'Faculty of Science',
-        'GEOL': 'Faculty of Science',
-        'ENEL': 'Faculty of Engineering',
-        'ENER': 'Faculty of Engineering',
-        'ENSE': 'Faculty of Engineering',
-        'ENGG': 'Faculty of Engineering',
-        'ENIN': 'Faculty of Engineering',
-        'ENPE': 'Faculty of Engineering',
-        'BUS': 'Faculty of Business',
-        'ADMN': 'Faculty of Business',
-        'PSYC': 'Faculty of Arts',
-        'ENGL': 'Faculty of Arts',
-        'HIST': 'Faculty of Arts',
-        'ECON': 'Faculty of Arts',
-        'SOC': 'Faculty of Arts',
-        'PHIL': 'Faculty of Arts',
-    }      
-
 
     @classmethod
-    def import_courses_from_pdf(cls, pdf_file):
+    def getCoursesFromFile(cls, pdf_file):
         file = pypdf.PdfReader(pdf_file)
         name_pattern = re.compile(r'^([A-Z]{2,4}\s\d{3})\s*-\s*(.+)$')
         
@@ -95,11 +71,11 @@ class Course(models.Model):
                             num_of_skipped += 1
 
         return num_of_created, num_of_skipped
-                        
+
                         
                         
 
-   
+
         
     
 
