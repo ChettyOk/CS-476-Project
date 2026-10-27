@@ -1,3 +1,4 @@
+# .\venv\Scripts\Activate.ps1
 from django.db import models
 import re
 import json
@@ -57,7 +58,7 @@ class Course(models.Model):
 
 
     @classmethod
-    def getCoursesFromFile(cls, pdf_file):
+    def import_courses_from_pdf(cls, pdf_file):
         file = pypdf.PdfReader(pdf_file)
         name_pattern = re.compile(r'^([A-Z]{2,4}\s\d{3})\s*-\s*(.+)$')
         
