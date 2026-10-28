@@ -1,6 +1,13 @@
 from django.shortcuts import render
 
 
+def login(request):
+    """Placeholder for the student and tutor sign-in page."""
+    return render(request, "login.html", {
+        "site_name": "tUtoR",
+    })
+
+
 def landing(request):
     """Public landing page. No accounts or bookings are read here."""
     return render(request, "landing.html", {
