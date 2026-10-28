@@ -8,6 +8,7 @@ from .constants import FACULTIES
 
 #import for users
 from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.base_user import BaseUserManager
 
 class Course(models.Model):
     course_code = models.CharField(max_length=10, unique=True)
@@ -81,6 +82,21 @@ class Course(models.Model):
         return num_of_created, num_of_skipped
 
 # User
+# create user accounts identified by email
+class UserManager(BaseUserManager):
+
+    def create_user(self, email, password=None, **extra_fields):
+        if not email:
+            raise ValueError("An email address is required.")
+
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save(using=self._db)
+
+        return user
+
+
 # shared account model for students and tutors
 class User(AbstractUser):
 
