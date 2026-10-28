@@ -1,0 +1,19 @@
+<svg width="256" height="256" viewBox="0 0 256 256" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g clip-path="url(#clip0_4_2)">
+<circle cx="155.762" cy="60.6871" r="31.5835" transform="rotate(-106.021 155.762 60.6871)" fill="white" stroke="white" stroke-width="27.4639"/>
+<circle cx="61.5819" cy="160.592" r="31.5835" transform="rotate(-106.021 61.5819 160.592)" fill="white" stroke="white" stroke-width="27.4639"/>
+<circle cx="194.418" cy="195.313" r="31.5835" transform="rotate(-106.021 194.418 195.313)" fill="white" stroke="white" stroke-width="27.4639"/>
+<path d="M83.2466 137.611L134.097 83.6688" stroke-width="31.5835" stroke-linecap="round" stroke="white"/>
+<path d="M163.861 187.326L92.1388 168.579" stroke-width="31.5835" stroke-linecap="round" stroke="white"/>
+<path d="M163.861 187.326L92.1388 168.579" stroke-width="23.3443" stroke-linecap="round" stroke="#004F2E"/>
+<path d="M83.2466 137.611L134.097 83.6688" stroke-width="23.3443" stroke-linecap="round" stroke="#004F2E"/>
+<circle cx="194.418" cy="195.313" r="31.5835" transform="rotate(-106.021 194.418 195.313)" stroke="#004F2E" stroke-width="19.2247"/>
+<circle cx="61.5819" cy="160.592" r="31.5835" transform="rotate(-106.021 61.5819 160.592)" fill="#004F2E" stroke="#004F2E" stroke-width="19.2247"/>
+<circle cx="155.762" cy="60.6871" r="31.5835" transform="rotate(-106.021 155.762 60.6871)" stroke="#004F2E" stroke-width="19.2247"/>
+</g>
+<defs>
+<clipPath id="clip0_4_2">
+<rect width="256" height="256" fill="white"/>
+</clipPath>
+</defs>
+</svg>
