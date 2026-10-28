@@ -11,6 +11,7 @@ from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
 from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
+from django.db.models.functions import Lower
 
 class Course(models.Model):
     course_code = models.CharField(max_length=10, unique=True)
@@ -87,17 +88,25 @@ class Course(models.Model):
 # create user accounts identified by email
 class UserManager(BaseUserManager):
 
+    @classmethod
+    def normalize_email(cls, email):
+        return super().normalize_email(email).strip().lower()
+
     def create_user(self, email, password=None, **extra_fields):
+        email = self.normalize_email(email)
+
         if not email:
             raise ValueError("An email address is required.")
 
-        email = self.normalize_email(email)
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
 
         return user
 
+    def get_by_natural_key(self, email):
+        email = self.normalize_email(email)
+        return self.get(email__iexact=email)
 
 # shared account model for students and tutors
 class User(AbstractUser):
@@ -121,6 +130,14 @@ class User(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = UserManager()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                Lower("email"),
+                name="accounts_user_email_ci_unique",
+            ),
+        ]
 
     def __str__(self):
         return self.email
