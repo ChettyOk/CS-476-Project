@@ -4,7 +4,7 @@ from django.db import IntegrityError
 
 # user import
 from django.test import SimpleTestCase
-from accounts.models import User
+from accounts.models import User, UserManager
 
 # courses tests
 class test_course(TestCase):
@@ -121,3 +121,20 @@ class user_role_tests(SimpleTestCase):
 
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
+
+
+
+class user_email_normalization_tests(SimpleTestCase):
+    def test_normalizes_email_case_and_outer_spaces(self):
+        email = UserManager.normalize_email("  Marie@EXAMPLE.COM  ")
+
+        self.assertEqual(email, "marie@example.com")
+
+    def test_normalization_preserves_plus_addressing(self):
+        email = UserManager.normalize_email("Marie+Study@Example.com")
+
+        self.assertEqual(email, "marie+study@example.com")
+
+    def test_create_user_rejects_whitespace_only_email(self):
+        with self.assertRaises(ValueError):
+            User.objects.create_user(email="   ", password="TestPassword")
