@@ -25,16 +25,21 @@ class Course(models.Model):
         return bool(re.match(pattern, course_code))
 
     @classmethod
-    def createCourse(cls, course_code, course_name, course_faculty):
+    def create_course(cls, course_code, course_name):
 
         if not cls.check_course_code_spelling(course_code):
             raise ValueError(f'invalid course code')
+        
+        match = re.match(r"^([A-Z]{2,4})\s*(\d{3})$", course_code.strip().upper())
+        course_code = f"{match.group(1)} {match.group(2)}"
 
-        course_code = course_code.strip().upper()
+        course_prefix = course_code.split()[0]
+        course_faculty = cls.FACULTIES.get(course_prefix, 'other')
+        
         return cls.objects.create(course_code = course_code, course_name = course_name, course_faculty = course_faculty)
 
     @classmethod
-    def getCoursesFromFile(cls, pdf_file):
+    def get_courses_from_file(cls, pdf_file):
         file = pypdf.PdfReader(pdf_file)
         name_pattern = re.compile(r'^([A-Z]{2,4}\s\d{3})\s*-\s*(.+)$')
         
