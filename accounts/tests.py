@@ -1,9 +1,9 @@
 from django.test import TestCase
 from .models import Course
-from django.db import IntegrityError
+from django.db import IntegrityError, transaction
 
 # user import
-from django.test import SimpleTestCase
+from django.test import SimpleTestCase, TestCase
 from accounts.models import User, UserManager
 
 # courses tests
@@ -138,3 +138,89 @@ class user_email_normalization_tests(SimpleTestCase):
     def test_create_user_rejects_whitespace_only_email(self):
         with self.assertRaises(ValueError):
             User.objects.create_user(email="   ", password="TestPassword")
+
+
+
+class UserDatabaseTests(TestCase):
+    def test_create_user_saves_normalized_email_and_password(self):
+        password = "LocalTestPassword-42"
+
+        user = User.objects.create_user(
+            email="  Marie@Example.com  ",
+            password=password,
+            first_name="Marie",
+            last_name="Beispiel",
+            phone="+49 170 1234567",
+        )
+
+        saved_user = User.objects.get(pk=user.pk)
+
+        self.assertEqual(saved_user.email, "marie@example.com")
+        self.assertEqual(saved_user.first_name, "Marie")
+        self.assertEqual(saved_user.last_name, "Beispiel")
+        self.assertEqual(saved_user.phone, "+49 170 1234567")
+        self.assertNotEqual(saved_user.password, password)
+        self.assertTrue(saved_user.check_password(password))
+        self.assertFalse(saved_user.check_password("WrongPassword"))
+        self.assertIsNotNone(saved_user.date_joined)
+        self.assertIsNotNone(saved_user.updated_at)
+
+    def test_duplicate_email_is_rejected(self):
+        User.objects.create_user(
+            email="marie@example.com",
+            password="LocalTestPassword-42",
+        )
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                User.objects.create_user(
+                    email="marie@example.com",
+                    password="AnotherTestPassword-42",
+                )
+
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_database_rejects_email_with_different_letter_case(self):
+        User.objects.create_user(
+            email="marie@example.com",
+            password="LocalTestPassword-42",
+        )
+
+        duplicate = User(email="MARIE@EXAMPLE.COM")
+        duplicate.set_password("AnotherTestPassword-42")
+
+        with self.assertRaises(IntegrityError):
+            with transaction.atomic():
+                duplicate.save()
+
+        self.assertEqual(User.objects.count(), 1)
+
+    def test_account_lookup_ignores_email_letter_case(self):
+        user = User.objects.create_user(
+            email="marie@example.com",
+            password="LocalTestPassword-42",
+        )
+
+        found_user = User.objects.get_by_natural_key(
+            "  MARIE@EXAMPLE.COM  "
+        )
+
+        self.assertEqual(found_user.pk, user.pk)
+
+    def test_role_change_is_persisted(self):
+        user = User.objects.create_user(
+            email="marie@example.com",
+            password="LocalTestPassword-42",
+        )
+
+        self.assertEqual(user.role, "")
+
+        user.switch_role(User.Role.TUTOR)
+        user.save()
+        user.refresh_from_db()
+
+        self.assertTrue(user.has_role(User.Role.TUTOR))
+        self.assertFalse(user.has_role(User.Role.STUDENT))
+        self.assertFalse(user.is_staff)
+        self.assertFalse(user.is_superuser)
+
