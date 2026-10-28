@@ -44,7 +44,7 @@ class test_course(TestCase):
             Course.create_course("CS 476", "Computer Science 476")
 
 # user tests
-class UserEmailValidationTests(SimpleTestCase):
+class user_email_validation_tests(SimpleTestCase):
     def test_accepts_valid_email_addresses(self):
         valid_emails = [
             "marie@example.com",
@@ -55,7 +55,7 @@ class UserEmailValidationTests(SimpleTestCase):
         for email in valid_emails:
             with self.subTest(email=email):
                 user = User(email=email)
-                self.assertTrue(user.checkEmail())
+                self.assertTrue(user.check_email())
 
     def test_rejects_invalid_email_addresses(self):
         invalid_emails = [
@@ -70,5 +70,54 @@ class UserEmailValidationTests(SimpleTestCase):
         for email in invalid_emails:
             with self.subTest(email=email):
                 user = User(email=email)
-                self.assertFalse(user.checkEmail())
+                self.assertFalse(user.check_email())
 
+class user_role_tests(SimpleTestCase):
+    def test_new_user_has_no_selected_role(self):
+        user = User(email="marie@example.com")
+
+        self.assertEqual(user.role, "")
+        self.assertFalse(user.has_role(User.Role.STUDENT))
+        self.assertFalse(user.has_role(User.Role.TUTOR))
+        self.assertFalse(user.has_role(""))
+
+    def test_has_role_checks_the_active_role(self):
+        user = User(
+            email="marie@example.com",
+            role=User.Role.STUDENT,
+        )
+
+        self.assertTrue(user.has_role(User.Role.STUDENT))
+        self.assertFalse(user.has_role(User.Role.TUTOR))
+        self.assertFalse(user.has_role("admin"))
+
+    def test_switch_role_changes_the_active_role(self):
+        user = User(email="marie@example.com")
+
+        user.switch_role(User.Role.STUDENT)
+        self.assertTrue(user.has_role(User.Role.STUDENT))
+
+        user.switch_role(User.Role.TUTOR)
+        self.assertTrue(user.has_role(User.Role.TUTOR))
+        self.assertFalse(user.has_role(User.Role.STUDENT))
+
+    def test_switch_role_rejects_invalid_roles(self):
+        user = User(
+            email="marie@example.com",
+            role=User.Role.STUDENT,
+        )
+
+        for invalid_role in ["admin", "", None]:
+            with self.subTest(role=invalid_role):
+                with self.assertRaises(ValueError):
+                    user.switch_role(invalid_role)
+
+                self.assertEqual(user.role, User.Role.STUDENT)
+
+    def test_switch_role_does_not_grant_admin_permissions(self):
+        user = User(email="marie@example.com")
+
+        user.switch_role(User.Role.TUTOR)
+
+        self.assertFalse(user.is_staff)
+        self.assertFalse(user.is_superuser)

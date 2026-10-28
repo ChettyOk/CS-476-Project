@@ -101,9 +101,20 @@ class UserManager(BaseUserManager):
 
 # shared account model for students and tutors
 class User(AbstractUser):
+
+    class Role(models.TextChoices):
+        STUDENT = "student", "Student"
+        TUTOR = "tutor", "Tutor"
+
     username = None
     email = models.EmailField(unique=True)
     phone = models.CharField(max_length=30, blank=True)
+    role = models.CharField(
+        max_length=10,
+        choices=Role.choices,
+        blank=True,
+        default="",
+    )
     updated_at = models.DateTimeField(auto_now=True)
 
     USERNAME_FIELD = "email"
@@ -115,7 +126,7 @@ class User(AbstractUser):
         return self.email
 
     #check whether the user's email has a valid format
-    def checkEmail(self):
+    def check_email(self):
 
         try:
             validate_email(self.email)
@@ -123,6 +134,20 @@ class User(AbstractUser):
             return False
 
         return True
+
+    # return the user's role
+    def has_role(self, role):
+
+        return role in self.Role.values and self.role == role
+
+    #switch the user role
+    def switch_role(self, role):
+        """Change the active role without saving the user."""
+
+        if role not in self.Role.values:
+            raise ValueError("Role must be 'student' or 'tutor'.")
+
+        self.role = role
 
 
 #     ID
