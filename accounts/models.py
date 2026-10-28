@@ -9,6 +9,8 @@ from .constants import FACULTIES
 #import for users
 from django.contrib.auth.models import AbstractUser
 from django.contrib.auth.base_user import BaseUserManager
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
 
 class Course(models.Model):
     course_code = models.CharField(max_length=10, unique=True)
@@ -99,8 +101,28 @@ class UserManager(BaseUserManager):
 
 # shared account model for students and tutors
 class User(AbstractUser):
+    username = None
+    email = models.EmailField(unique=True)
+    phone = models.CharField(max_length=30, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
-    pass
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = []
+
+    objects = UserManager()
+
+    def __str__(self):
+        return self.email
+
+    #check whether the user's email has a valid format
+    def checkEmail(self):
+
+        try:
+            validate_email(self.email)
+        except ValidationError:
+            return False
+
+        return True
 
 
 #     ID

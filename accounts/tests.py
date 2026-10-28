@@ -2,6 +2,11 @@ from django.test import TestCase
 from .models import Course
 from django.db import IntegrityError
 
+# user import
+from django.test import SimpleTestCase
+from accounts.models import User
+
+# courses tests
 class test_course(TestCase):
 
     def test_course_code_validity(self):
@@ -37,4 +42,33 @@ class test_course(TestCase):
         self.assertTrue(created1)
         with self.assertRaises(IntegrityError):
             Course.create_course("CS 476", "Computer Science 476")
+
+# user tests
+class UserEmailValidationTests(SimpleTestCase):
+    def test_accepts_valid_email_addresses(self):
+        valid_emails = [
+            "marie@example.com",
+            "marie.hartig@example.ca",
+            "marie+study@example.com",
+        ]
+
+        for email in valid_emails:
+            with self.subTest(email=email):
+                user = User(email=email)
+                self.assertTrue(user.checkEmail())
+
+    def test_rejects_invalid_email_addresses(self):
+        invalid_emails = [
+            "",
+            "marie",
+            "marie.example.com",
+            "@example.com",
+            "marie@",
+            "marie example@example.com",
+        ]
+
+        for email in invalid_emails:
+            with self.subTest(email=email):
+                user = User(email=email)
+                self.assertFalse(user.checkEmail())
 
