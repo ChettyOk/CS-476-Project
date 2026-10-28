@@ -6,6 +6,9 @@ import os
 import pypdf
 from .constants import FACULTIES
 
+#import for users
+from django.contrib.auth.models import AbstractUser
+
 class Course(models.Model):
     course_code = models.CharField(max_length=10, unique=True)
     course_name = models.CharField(max_length=200)
@@ -77,15 +80,13 @@ class Course(models.Model):
 
         return num_of_created, num_of_skipped
 
-                        
-                        
-
-
-        
-    
-
-
 # User
+# shared account model for students and tutors
+class User(AbstractUser):
+
+    pass
+
+
 #     ID
 #     first, last name
 #     email
