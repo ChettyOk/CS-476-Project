@@ -1,0 +1,159 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{{ site_name }} · Book a tutor without the noticeboard</title>
+  <meta name="description" content="tUtoR is a booking page for students and tutors at the {{ campus }}. Find someone who passed the course and book a time, instead of pinning a note in a hallway.">
+  <meta name="theme-color" content="#004f2e">
+  <link rel="icon" href="{% static 'img/logo-only.svg' %}" type="image/svg+xml">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,560;9..144,640&family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+</head>
+<body>
+  <a class="visually-hidden-focusable skip-link" href="#main">Skip to content</a>
+  <header class="navbar navbar-expand-lg sticky-top site-header">
+    <div class="container">
+      <a class="navbar-brand py-0" href="{% url 'landing' %}">
+        <img src="{% static 'img/tutor-logo.svg' %}" alt="{{ site_name }}" width="148" height="46">
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#site-nav" aria-controls="site-nav" aria-expanded="false" aria-label="Menu">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <nav class="collapse navbar-collapse" id="site-nav" aria-label="Page">
+        <ul class="navbar-nav ms-lg-auto">
+          <li class="nav-item"><a class="nav-link" href="#problem">The problem</a></li>
+          <li class="nav-item"><a class="nav-link" href="#how">How it works</a></li>
+          <li class="nav-item"><a class="nav-link" href="#students">Students</a></li>
+          <li class="nav-item"><a class="nav-link" href="#tutors">Tutors</a></li>
+        </ul>
+        <a class="btn btn-green rounded-pill ms-lg-3 mt-3 mt-lg-0" href="{% url 'login' %}">Sign in</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero">
+      <div class="container">
+        <div class="row align-items-center g-4 g-lg-5">
+          <div class="col-lg-7">
+            <img class="hero-logo" src="{% static 'img/tutor-logo-light.svg' %}" alt="" width="210" height="66">
+            <p class="kicker">{{ campus }}</p>
+            <h1>The first conversation should not start on a noticeboard.</h1>
+            <p class="lede">Students looking for help and classmates who already passed the course still meet on a hallway board. {{ site_name }} is the booking page for that first step: find the course, see a free hour, and reserve the session.</p>
+            <div class="d-flex flex-wrap align-items-center gap-3 mt-4">
+              <a class="btn btn-gold rounded-pill" href="#students">I need a tutor</a>
+              <a class="btn btn-outline-light rounded-pill" href="#tutors">I can tutor</a>
+            </div>
+          </div>
+          <div class="col-lg-5">
+            <div class="board" aria-hidden="true">
+              <p class="board-label mb-0">Outside the lab, this week</p>
+              <article class="slip slip-tilt">
+                <strong>STAT 160</strong>
+                <span>Need a tutor before Friday. Text the number on this slip.</span>
+              </article>
+              <article class="slip">
+                <strong>CS 110 — I passed</strong>
+                <span>Can help Tue / Thu. Tear off a tab.</span>
+              </article>
+              <article class="slip slip-tilt-back">
+                <strong>MATH 110 midterm</strong>
+                <span>Anyone?? Pinned over the last note.</span>
+              </article>
+              <p class="board-foot mb-0">Same classmates. A booking, instead of a thumbtack.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="problem">
+      <div class="container">
+        <p class="kicker kicker-green">Why the board fails</p>
+        <h2>A thumbtack is a poor way to start a tutoring session.</h2>
+        <div class="row g-3">
+          {% for item in problems %}
+          <div class="col-md-4">
+            <article class="card h-100">
+              <div class="card-body">
+                <h3 class="card-title">{{ item.title }}</h3>
+                <p class="card-text">{{ item.text }}</p>
+              </div>
+            </article>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+
+    <section class="section section-band" id="how">
+      <div class="container">
+        <p class="kicker kicker-green">How booking works</p>
+        <h2>From “anyone free?” to a time you both keep.</h2>
+        <ol class="row g-3 list-unstyled mb-0">
+          {% for step in steps %}
+          <li class="col-md-4">
+            <article class="card h-100">
+              <div class="card-body">
+                <span class="step-number">{{ step.number }}</span>
+                <h3 class="card-title">{{ step.title }}</h3>
+                <p class="card-text">{{ step.text }}</p>
+              </div>
+            </article>
+          </li>
+          {% endfor %}
+        </ol>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="row g-3">
+          <div class="col-lg-6">
+            <article class="card h-100 audience" id="students">
+              <div class="card-body">
+                <p class="kicker kicker-green">Students</p>
+                <h2>Ask for the course you are taking.</h2>
+                <p class="card-text">Filter by faculty and the hours you are actually free. You see tutors who passed that course, not a stack of overlapping paper.</p>
+                <a class="btn btn-green rounded-pill" href="#how">See the booking steps</a>
+              </div>
+            </article>
+          </div>
+          <div class="col-lg-6">
+            <article class="card h-100 audience audience-tutor text-white" id="tutors">
+              <div class="card-body">
+                <p class="kicker">Tutors</p>
+                <h2>Offer a course you have passed.</h2>
+                <p class="card-text">Set the hours you repeat each week and what a session costs. Students book an open slot. Your number stays off the public board.</p>
+                <a class="btn btn-gold rounded-pill" href="#how">See the booking steps</a>
+              </div>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3">
+      <img src="{% static 'img/tutor-logo-light.svg' %}" alt="{{ site_name }}" width="132" height="42">
+      <p class="mb-0">{{ site_name }} is a student and tutor booking page for the {{ campus }}. It is not an official university service.</p>
+    </div>
+  </footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    const siteNav = document.querySelector("#site-nav");
+    const navCollapse = bootstrap.Collapse.getOrCreateInstance(siteNav, { toggle: false });
+    siteNav.querySelectorAll(".nav-link").forEach((link) => {
+      link.addEventListener("click", () => {
+        if (window.matchMedia("(max-width: 991.98px)").matches) navCollapse.hide();
+      });
+    });
+  </script>
+</body>
+</html>
