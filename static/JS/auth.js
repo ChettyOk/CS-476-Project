@@ -3,7 +3,7 @@
 (function () {
   "use strict";
 
-  //Show/hide 
+  // Show / hide password buttons
   document.querySelectorAll("[data-toggle-password]").forEach(function (button) {
     var input = document.querySelector(button.getAttribute("data-toggle-password"));
     if (!input) return;
@@ -15,7 +15,7 @@
     });
   });
 
-  // "Confirm password" setup
+  // "Confirm password" must match the first password field
   document.querySelectorAll("[data-match]").forEach(function (confirm) {
     var original = document.querySelector(confirm.getAttribute("data-match"));
     var feedback = confirm.parentElement.querySelector(".invalid-feedback");
@@ -33,7 +33,7 @@
     original.addEventListener("input", check);
   });
 
-  // Code to Clear an error sent by the server as soon as the person edits that field
+  // Clear an error sent by the server as soon as the person edits that field
   document.querySelectorAll("input.is-invalid").forEach(function (input) {
     input.addEventListener("input", function () {
       input.classList.remove("is-invalid");
@@ -60,7 +60,7 @@
       }
     });
 
-    // Coming back with the browser's Back button will not leave the button disabled
+    // Coming back with the browser's Back button must not leave the button disabled
     window.addEventListener("pageshow", function (event) {
       if (event.persisted && submit) {
         submit.disabled = false;
