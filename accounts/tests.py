@@ -4,7 +4,7 @@ from django.db import IntegrityError, transaction
 
 # user import
 from django.test import SimpleTestCase, TestCase
-from accounts.models import User, UserManager
+from accounts.models import User, UserManager, StudentProfile
 
 # courses tests
 class test_course(TestCase):
@@ -223,4 +223,26 @@ class UserDatabaseTests(TestCase):
         self.assertFalse(user.has_role(User.Role.STUDENT))
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
+
+class test_Student_Profile(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email="example_student@uregina.ca",
+            password="67676969"
+        )
+        self.profile = StudentProfile.objects.create(user=self.user, major="CS", semester=1)
+        self.course1 = Course.create_course("CS 476", "Software Development")
+        self.course2 = Course.create_course("ENER 120", "Energy")
+
+    def test_add_and_get_enrolled_courses(self):
+        self.profile.add_course(self.course1)
+        self.profile.add_course(self.course2)
+        enrolled = self.profile.get_enrolled_courses()
+        self.assertEqual(enrolled.count(), 2)
+        self.assertIn(self.course1, enrolled)
+
+    def test_remove_course(self):
+        self.profile.add_course(self.course1)
+        self.profile.remove_course(self.course1)
+        self.assertEqual(self.profile.get_enrolled_courses().count(), 0)
 
