@@ -1,5 +1,11 @@
 from django.shortcuts import render
 
+def register(request):
+    """Register page.For Signing Up new users"""
+    return render(request, "register.html", {
+        "site_name": "tUtoR",
+    })
+
 
 def login(request):
     """Placeholder for the student and tutor sign-in page."""
