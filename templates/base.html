@@ -63,13 +63,7 @@
           <ul class="navbar-nav ms-lg-auto">
             {% block nav_links %}{% endblock %}
           </ul>
-          {% block nav_actions %}
-          <a
-            class="btn btn-green rounded-pill ms-lg-3 mt-3 mt-lg-0"
-            href="{% url 'login' %}"
-            >Sign in</a
-          >
-          {% endblock %}
+          {% block nav_actions %} {% endblock %}
         </nav>
       </div>
     </header>
