@@ -28,22 +28,22 @@ def register(request):
     try:
         validate_email(email)
     except ValidationError:
-        errors["email"] = "Bitte gib eine gültige E-Mail-Adresse ein."
+        errors["email"] = "Please enter a valid email address."
 
     if len(password) < 8:
-        errors["password"] = "Das Passwort muss mindestens 8 Zeichen lang sein."
+        errors["password"] = "The password must be at least 8 characters long."
 
     if errors:
         return JsonResponse({"errors": errors}, status=400)
 
     if User.objects.filter(email__iexact=email).exists():
         return JsonResponse(
-            {"errors": {"email": "Diese E-Mail-Adresse ist bereits registriert."}},
+            {"errors": {"email": "This email address is already registered."}},
             status=409,
         )
 
     User.objects.create_user(email=email, password=password)
-    return JsonResponse({"message": "Benutzerkonto erstellt."}, status=201)
+    return JsonResponse({"message": "User account created."}, status=201)
 
 #     login()
 #     logout()
