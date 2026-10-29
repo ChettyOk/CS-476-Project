@@ -226,12 +226,9 @@ class UserDatabaseTests(TestCase):
 
 class test_Student_Profile(TestCase):
     def setUp(self):
-        self.user = User.objects.create_user(
-            email="example_student@uregina.ca",
-            password="67676969"
-        )
+        self.user = User.objects.create_user(email="example_student@uregina.ca", password="67676969")
         self.profile = StudentProfile.objects.create(user=self.user, major="CS", semester=1)
-        self.course1 = Course.create_course("CS 476", "Software Development")
+        self.course1 = Course.create_course("CS 476", "Software Development Project")
         self.course2 = Course.create_course("ENER 120", "Energy")
 
     def test_add_and_get_enrolled_courses(self):
@@ -246,3 +243,8 @@ class test_Student_Profile(TestCase):
         self.profile.remove_course(self.course1)
         self.assertEqual(self.profile.get_enrolled_courses().count(), 0)
 
+    def test_update_profile(self):
+        self.profile.update_profile(major="ENER", semester=4)
+        self.profile.refresh_from_db()
+        self.assertEqual(self.profile.major, "ENER")
+        self.assertEqual(self.profile.semester, 4)
