@@ -1,10 +1,12 @@
 from django.test import TestCase
 from .models import Course
+from django.urls import reverse
 from django.db import IntegrityError, transaction
 
 # user import
 from django.test import SimpleTestCase, TestCase
 from accounts.models import User, UserManager
+from .models import User
 
 # courses tests
 class test_course(TestCase):
@@ -223,4 +225,46 @@ class UserDatabaseTests(TestCase):
         self.assertFalse(user.has_role(User.Role.STUDENT))
         self.assertFalse(user.is_staff)
         self.assertFalse(user.is_superuser)
+
+class RegisterViewTests(TestCase):
+    def test_register_creates_user(self):
+        response = self.client.post(reverse("register"), {
+            "email": "new@example.com",
+            "password": "testpass123",
+        })
+
+        self.assertEqual(response.status_code, 201)
+        user = User.objects.get(email="new@example.com")
+        self.assertTrue(user.check_password("testpass123"))
+
+    def test_register_rejects_invalid_email(self):
+        response = self.client.post(reverse("register"), {
+            "email": "not-an-email",
+            "password": "testpass123",
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("email", response.json()["errors"])
+
+    def test_register_rejects_short_password(self):
+        response = self.client.post(reverse("register"), {
+            "email": "new@example.com",
+            "password": "short",
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("password", response.json()["errors"])
+
+    def test_register_rejects_duplicate_email(self):
+        User.objects.create_user(
+            email="existing@example.com",
+            password="testpass123",
+        )
+
+        response = self.client.post(reverse("register"), {
+            "email": "EXISTING@example.com",
+            "password": "anotherpass123",
+        })
+
+        self.assertEqual(response.status_code, 409)
 
