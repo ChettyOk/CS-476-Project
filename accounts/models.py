@@ -171,7 +171,7 @@ class StudentProfile(models.Model):
     MAJORS = [(sub, sub) for sub in sorted(FACULTIES.keys())]
 
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='student_profile')
-    major = models.CharField(max_length=10, choices=MAJORS, blank=True, default='')
+    major = models.CharField(max_length=4, choices=MAJORS, blank=True, default='')
     semester = models.PositiveSmallIntegerField(default=1)
     average_rating = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True, default=None)
     courses = models.ManyToManyField(Course, blank=True, related_name='students_enrolled') 
@@ -188,3 +188,17 @@ class StudentProfile(models.Model):
     def get_enrolled_courses(self):
         return self.courses.all()
 
+    def update_profile(self, major=None, semester=None):
+        if major is not None:
+            if major != '' and major not in dict(self.MAJORS):
+                raise ValueError("Invalid major.")
+            self.major = major
+        if semester is not None:
+            self.semester = semester
+        self.save() 
+
+    @property
+    def display_student_rating(self):
+        if self.average_rating is None:
+            return "No rating yet"
+        return f"{self.average_rating:.2f}"
