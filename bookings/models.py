@@ -1,47 +1,47 @@
 from django.db import models
+from decimal import Decimal
+from django.conf import settings
+from django.utils import timezone
+from accounts.models import Course
 
-# Create your models here.
+class Booking(models.Model):
+    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='student_bookings')
 
-# ==========================================
-# VON MIR (DJANGO DEFAULTS)
-# ==========================================
+    tutor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='tutor_bookings')
 
-# ==========================================
-# VON EUCH (AUS DEM PDF)
-# ==========================================
+    course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True, related_name='course_bookings')
 
-# Available Slots
-#     ID
-#     tutor ID
-#     start Time
-#     end Time
-#     salary
-#     locationType (ONLINE, IN-PERSON)
-#     status (Available, Booked, pending, Cancelled)
-#     create Slot()
-#     update Slot()
-#     cancel Slot()
-#     is Available()
-#     check for time overlap()
-#     check Start & Endtime()
-#     calculate price suggestion()
+    time_slot = models.ForeignKey('Available_Slots', on_delete=models.PROTECT, related_name='bookings') 
 
-# Booking
-#     ID
-#     Slot ID
-#     Student ID
-#     tutor ID
-#     price
-#     course / topic
-#     status (Pending, Canceled By..., Completed)
-#     requested at
-#     canceled at
-#     completed at
-#     (cancellation Reason)
-#     create Booking Request()
-#     cancel by Student()
-#     cancel by Tutor()
-#     mark as Completed()
-#     ask for Review()
-#     calculate Price per Session()
-#     unblock Booking()
+    student_note = models.CharField(max_length=255, blank=True, default='')
+
+    session_price = models.DecimalField(max_digits=6, decimal_places=2)
+
+    class Status(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        CONFIRMED = 'confirmed', 'Confirmed'
+        CANCELLED_STUDENT = 'cancelled_by_student', 'Cancelled by Student'
+        CANCELLED_TUTOR = 'cancelled_by_tutor', 'Cancelled by Tutor'
+        COMPLETED = 'completed', 'Completed'
+    status = models.CharField(max_length=30, choices=Status.choices, default=Status.PENDING)
+
+    requested_at = models.DateTimeField(auto_now_add=True)
+    canceled_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    cancellation_reason = models.TextField(blank=True, default='')
+
+    def __str__(self):
+        return f"Booking #{self.id} | {self.student.email} -> {self.tutor.email} ({self.status})"
+
+    def confirm(self):
+
+    def cancel_by_student(self, reason=''):
+
+    def cancel_by_tutor(self, reason=''):
+
+    def mark_as_completed(self):
+
+    @staticmethod
+    def calculate_price_per_session(hourly_rate, start_time, end_time):
+    
+    def unblock_booking(self):
