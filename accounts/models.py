@@ -194,6 +194,8 @@ class StudentProfile(models.Model):
                 raise ValueError("Invalid major.")
             self.major = major
         if semester is not None:
+            if semester <= 0:
+                raise ValueError("Semester should be an positive integer")
             self.semester = semester
         self.save() 
 
