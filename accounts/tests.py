@@ -248,3 +248,7 @@ class test_Student_Profile(TestCase):
         self.profile.refresh_from_db()
         self.assertEqual(self.profile.major, "ENER")
         self.assertEqual(self.profile.semester, 4)
+        with self.assertRaises(ValueError):
+            self.profile.update_profile(major="ENER", semester=0)
+        with self.assertRaises(ValueError):
+            self.profile.update_profile(major="ENER", semester=-1)
