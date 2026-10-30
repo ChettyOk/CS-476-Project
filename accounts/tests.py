@@ -268,3 +268,40 @@ class RegisterViewTests(TestCase):
 
         self.assertEqual(response.status_code, 409)
 
+class AuthenticationViewTests(TestCase):
+    def setUp(self):
+        self.password = "testpass123"
+        self.user = User.objects.create_user(
+            email="test@example.com",
+            password=self.password,
+        )
+
+    def test_login_creates_authenticated_session(self):
+        response = self.client.post(reverse("login"), {
+            "email": "test@example.com",
+            "password": self.password,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            self.client.session.get("_auth_user_id"),
+            str(self.user.pk),
+        )
+
+    def test_login_rejects_invalid_password(self):
+        response = self.client.post(reverse("login"), {
+            "email": "test@example.com",
+            "password": "wrongpass123",
+        })
+
+        self.assertEqual(response.status_code, 401)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_logout_clears_authenticated_session(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse("logout"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
