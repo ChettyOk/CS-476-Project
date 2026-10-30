@@ -4,6 +4,7 @@ from django.core.validators import validate_email
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
+from django.contrib.auth.forms import PasswordResetForm
 
 from .models import User
 
@@ -69,10 +70,28 @@ def logout(request):
     return JsonResponse({"message": "Logout successful."}, status=200)
 
 
-#
-#     logout()
-#     request Forgotten Password()
-#     reset Password()
+@require_POST
+def request_forgotten_password(request):
+    form = PasswordResetForm(request.POST)
+
+    if not form.is_valid():
+        return JsonResponse(
+            {"errors": form.errors.get_json_data()},
+            status=400,
+        )
+
+    form.save(
+        request=request,
+        use_https=request.is_secure(),
+        email_template_name="registration/password_reset_email.txt",
+        subject_template_name="registration/password_reset_subject.txt",
+    )
+
+    # Keep the response the same whether or not the email belongs to an account.
+    return JsonResponse(
+        {"message": "If an account exists for that email, a reset link has been sent."},
+        status=200,
+    )
 
 # Profile Controller
 #     get My Profile()
