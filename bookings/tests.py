@@ -3,7 +3,7 @@ from django.test import TestCase
 from accounts.models import Course, User
 from django.test import Client
 from django.urls import reverse
-from bookings.pricing import (calc_price_suggestion, DEFAULT_PRICE_UNDERGRAD, DEFAULT_PRICE_GRAD)
+from bookings.pricing import (calc_price_suggestion, DEFAULT_PRICE_UNDERGRAD, DEFAULT_PRICE_GRAD, MAX_PRICE, MIN_PRICE, custom_pricing)
 from decimal import Decimal
 
 
@@ -62,7 +62,7 @@ class test_filter_courses_system(TestCase):
         
 
 
-class Test_suggested_pricing(TestCase):
+class Test_pricing(TestCase):
     def setUp(self):
         self.undergrad_tutor = User.objects.create_user(email="ugrad@uregina.ca",password="67676AjdA!"
         )
@@ -81,9 +81,23 @@ class Test_suggested_pricing(TestCase):
         price = calc_price_suggestion(self.grad_tutor)
         self.assertEqual(price, DEFAULT_PRICE_GRAD)
 
-   # def test_mean_calc(self):
-   #     price = calc_price_suggestion(self.undergrad_tutor)
-   #     self.assertEqual(price, Decimal('25.00'))
+    # def test_mean_calc(self):
+    #     price = calc_price_suggestion(self.undergrad_tutor)
+    #     self.assertEqual(price, Decimal('25.00'))
 
-   
-        
+    def test_min_price(self):
+        with self.assertRaises(ValueError) as ctx:
+            custom_pricing('1.00')
+        self.assertIn("Minimum price is $15.70/hour", str(ctx.exception))
+
+    def test_max_price(self):
+        with self.assertRaises(ValueError) as ctx:
+            custom_pricing('151.00')
+        self.assertIn("Maximum price is $150.00/hour", str(ctx.exception))
+
+    def test_custom_pricing_valid(self):
+        self.assertEqual(custom_pricing('25.50'), Decimal('25.50'))
+        self.assertEqual(custom_pricing(25.5), Decimal('25.50'))
+        with self.assertRaises(ValueError) as ctx:
+            custom_pricing('xxx')
+        self.assertIn("Price must be a valid number", str(ctx.exception))
