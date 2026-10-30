@@ -18,11 +18,14 @@ from django.contrib import admin
 from django.urls import path
 
 from accounts.views import register
+from accounts.views import login, logout, register
 from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.landing, name='landing'),
     path('login/', views.login, name='login'),
+    path('login/', login, name='login'),
+    path('logout/', logout, name='logout'),
     path('register/', register, name='register'),
 ]

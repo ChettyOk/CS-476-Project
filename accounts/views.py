@@ -3,6 +3,7 @@ from django.core.exceptions import ValidationError
 from django.core.validators import validate_email
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
+from django.contrib.auth import authenticate, login as auth_login, logout as auth_logout
 
 from .models import User
 
@@ -45,7 +46,30 @@ def register(request):
     User.objects.create_user(email=email, password=password)
     return JsonResponse({"message": "User account created."}, status=201)
 
-#     login()
+
+@require_POST
+def login(request):
+    email = request.POST.get("email", "").strip().lower()
+    password = request.POST.get("password", "")
+
+    user = authenticate(request, username=email, password=password)
+
+    if user is None:
+        return JsonResponse(
+            {"error": "Invalid email address or password."},
+            status=401,
+        )
+    auth_login(request, user)
+    return JsonResponse({"message": "Login successful."}, status=200)
+
+
+@require_POST
+def logout(request):
+    auth_logout(request)
+    return JsonResponse({"message": "Logout successful."}, status=200)
+
+
+#
 #     logout()
 #     request Forgotten Password()
 #     reset Password()
