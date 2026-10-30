@@ -1,8 +1,10 @@
 from django.urls import reverse
 from django.test import TestCase
-from accounts.models import Course
+from accounts.models import Course, User
 from django.test import Client
 from django.urls import reverse
+from bookings.pricing import (calc_price_suggestion, DEFAULT_PRICE_UNDERGRAD, DEFAULT_PRICE_GRAD)
+from decimal import Decimal
 
 
 class test_filter_courses_system(TestCase):
@@ -58,5 +60,30 @@ class test_filter_courses_system(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['courses'].count(), 0)
         
-        
+
+
+class Test_suggested_pricing(TestCase):
+    def setUp(self):
+        self.undergrad_tutor = User.objects.create_user(email="ugrad@uregina.ca",password="67676AjdA!"
+        )
+        self.grad_tutor = User.objects.create_user(email="grad@uregina.ca",password="69ss69lH!"
+        )
+        self.grad_tutor.is_graduate = True
+
+        # Available_Slots.objects.create(tutor=self.undergrad_tutor, session_price=Decimal('20.00'))
+        # Available_Slots.objects.create(tutor=self.undergrad_tutor, session_price=Decimal('30.00'))
+
+    def test_default_undergrad(self):
+        price = calc_price_suggestion(self.undergrad_tutor)
+        self.assertEqual(price, DEFAULT_PRICE_UNDERGRAD)
+
+    def test_default_grad(self):
+        price = calc_price_suggestion(self.grad_tutor)
+        self.assertEqual(price, DEFAULT_PRICE_GRAD)
+
+   # def test_mean_calc(self):
+   #     price = calc_price_suggestion(self.undergrad_tutor)
+   #     self.assertEqual(price, Decimal('25.00'))
+
+   
         
