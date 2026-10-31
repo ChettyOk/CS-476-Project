@@ -13,6 +13,9 @@ from django.contrib.auth import get_user_model
 from bookings.models import Booking
 User = get_user_model()
 
+from unittest.mock import MagicMock
+from bookings.services import create_booking_request, get_user_bookings, DoubleBookingError
+
 class test_filter_courses_system(TestCase):
     
     def setUp(self):
@@ -141,7 +144,6 @@ class Test_pricing(TestCase):
         with self.assertRaises(ValueError) as ctx:
             custom_pricing('xxx')
         self.assertIn("Price must be a valid number", str(ctx.exception))
-     
         
 class Test_Booking_Model(TestCase):
     def setUp(self):
@@ -209,4 +211,56 @@ class Test_Booking_Model(TestCase):
 
     def test_unblock_booking(self):
         booking = self.create_booking()
-        booking.unblock_booking()       
+        booking.unblock_booking()  
+
+class Test_create_booking(TestCase):
+    def setUp(self):
+        self.student = User.objects.create_user(email="student@uregina.ca", password="67676767!jffhH")
+        self.tutor = User.objects.create_user(email="tutor@uregina.ca", password="67676767!jffhH")
+        self.course1 = Course.create_course("ENER 202", "Energy")
+        self.course2 = Course.create_course("CS 476", "SW-Project")
+        self.course3 = Course.create_course("CS 477", "SW-Project2")
+        # can be replaced with actual available_slot funciton once available
+        class Dummy_Slot: 
+            objects = MagicMock()
+        self.mock_slot = Dummy_Slot()
+        self.mock_slot.id = 1
+        self.mock_slot.status = 'available'
+        self.mock_slot.price_per_hour = Decimal('20.00')
+        self.mock_slot.start_time = datetime(2026, 11, 1, 14, 0, 0)
+        self.mock_slot.end_time = datetime(2026, 11, 1, 15, 30, 0) #1,5h
+        self.mock_slot.save = MagicMock()
+        Dummy_Slot.objects.select_for_update.return_value.get.return_value = self.mock_slot 
+
+    def test_create_booking(self):
+        booking = create_booking_request(
+            student=self.student,
+            tutor=self.tutor,
+            slot=self.mock_slot,
+            course=self.course1,
+            student_note="Hilfeeeeeeeeeeeeeeeee wipfi kann nicht erklären")
+        self.assertEqual(booking.status, Booking.Status.CONFIRMED)
+        self.assertEqual(booking.session_price, Decimal('30.00'))
+        self.assertEqual(self.mock_slot.status, 'booked')
+        self.mock_slot.save.assert_called_once()
+
+    def test_double_booking_protection(self):
+        self.mock_slot.status = 'booked'
+        with self.assertRaises(DoubleBookingError):
+            create_booking_request(
+                student=self.student,
+                tutor=self.tutor,
+                slot=self.mock_slot,
+                course=self.course1,
+                student_note="Hilfeeeeeeeeeeeeeeeee wipfi kann nicht erklären")
+    
+    def test_get_user_bookings(self):
+        Booking.objects.create(student=self.student, tutor=self.tutor, course=self.course1, session_price=Decimal('20.00'))
+        Booking.objects.create(student=self.student, tutor=self.tutor, course=self.course2, session_price=Decimal('25.00'))
+        Booking.objects.create(student=self.tutor, tutor=self.student, course=self.course3, session_price=Decimal('30.00'))
+
+        user_bookings = get_user_bookings(self.student)
+        self.assertEqual(user_bookings['student_bookings'].count(), 2)
+        self.assertEqual(user_bookings['tutor_bookings'].count(), 1)
+        self.assertEqual(user_bookings['all_bookings'].count(), 3)
+        self.assertEqual(user_bookings['tutor_bookings'].first().course, self.course3)
