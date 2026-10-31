@@ -7,6 +7,11 @@ from bookings.pricing import (calc_price_suggestion, DEFAULT_PRICE_UNDERGRAD, DE
 from decimal import Decimal
 import time
 
+from datetime import datetime, timedelta
+from decimal import Decimal
+from django.contrib.auth import get_user_model
+from bookings.models import Booking
+User = get_user_model()
 
 class test_filter_courses_system(TestCase):
     
@@ -138,3 +143,70 @@ class Test_pricing(TestCase):
         self.assertIn("Price must be a valid number", str(ctx.exception))
      
         
+class Test_Booking_Model(TestCase):
+    def setUp(self):
+        self.student = User.objects.create_user(email="student@uregina.ca", password="6767677jd!")
+        self.tutor = User.objects.create_user(email="tutor@uregina.ca", password="6767677jd!")
+        self.course = Course.create_course("CS 476", "Software Engineering")
+
+    def create_booking(self, status=Booking.Status.PENDING):
+        return Booking.objects.create(student=self.student, tutor=self.tutor, course=self.course, student_note="WoHOOOOW", session_price=Decimal('30.00'), status=status)
+
+    def test_booking_creation(self):
+        booking = self.create_booking()
+        self.assertEqual(booking.status, Booking.Status.PENDING)
+        self.assertEqual(booking.session_price, Decimal('30.00'))
+        self.assertIsNotNone(booking.request_time)
+        self.assertIn("student@uregina.ca", str(booking))
+        self.assertIn("tutor@uregina.ca", str(booking))
+        self.assertEqual(booking.course, self.course)
+
+    def test_confirm(self):
+        booking = self.create_booking()
+        booking.confirm()
+        self.assertEqual(booking.status, Booking.Status.CONFIRMED)
+        with self.assertRaises(ValueError):
+            booking.confirm()
+
+    def test_cancel_student(self):
+        booking = self.create_booking()
+        booking.cancel(cancelled_by='student', reason='Fortnite')
+        self.assertEqual(booking.status, Booking.Status.CANCELLED_STUDENT)
+        self.assertEqual(booking.cancellation_reason, 'Fortnite')
+        self.assertIsNotNone(booking.cancel_time)
+
+    def test_cancel_tutor(self):
+        booking = self.create_booking()
+        booking.cancel(cancelled_by='tutor', reason='kein bock')
+        self.assertEqual(booking.status, Booking.Status.CANCELLED_TUTOR)
+        self.assertEqual(booking.cancellation_reason, 'kein bock')
+
+    def test_cancel_error(self):
+        booking = self.create_booking()
+        booking.cancel(cancelled_by='student')
+        with self.assertRaises(ValueError):
+            booking.cancel(cancelled_by='tutor')
+        booking2 = self.create_booking()
+        with self.assertRaises(ValueError):
+            booking2.cancel(cancelled_by='grandma')
+
+    def test_completed(self):
+        booking = self.create_booking()
+        with self.assertRaises(ValueError):
+            booking.completed()
+        booking.confirm()
+        booking.completed()
+        self.assertEqual(booking.status, Booking.Status.COMPLETED)
+        self.assertIsNotNone(booking.complete_time)
+
+    def test_calc_price_per_session(self):
+        start_time = datetime(2026, 11, 1, 14, 0, 0)
+        end_time = datetime(2026, 11, 1, 15, 30, 0) # = 1,5h
+        price = Booking.calc_price_per_session(Decimal('20.00'), start_time, end_time)
+        self.assertEqual(price, Decimal('30.00'))
+        with self.assertRaises(ValueError):
+            Booking.calc_price_per_session(Decimal('20.00'), end_time, start_time)
+
+    def test_unblock_booking(self):
+        booking = self.create_booking()
+        booking.unblock_booking()       

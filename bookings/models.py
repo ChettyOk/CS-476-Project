@@ -72,7 +72,7 @@ class Booking(models.Model):
 
 
     @staticmethod
-    def calculate_price_per_session(price_per_hour, start_time, end_time):
+    def calc_price_per_session(price_per_hour, start_time, end_time):
         duration_seconds = (end_time - start_time).total_seconds()
         if duration_seconds <= 0:
             raise ValueError("End time cannot be before start time.") 
