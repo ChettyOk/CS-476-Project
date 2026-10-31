@@ -5,6 +5,7 @@ from django.test import Client
 from django.urls import reverse
 from bookings.pricing import (calc_price_suggestion, DEFAULT_PRICE_UNDERGRAD, DEFAULT_PRICE_GRAD, MAX_PRICE, MIN_PRICE, custom_pricing)
 from decimal import Decimal
+import time
 
 
 class test_filter_courses_system(TestCase):
@@ -59,7 +60,41 @@ class test_filter_courses_system(TestCase):
         response = self.client.get(reverse('search'), {'q': '676767676767'})
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.context['courses'].count(), 0)
-        
+
+class Latency_tests(TestCase): 
+    @classmethod
+    def setUp(self):
+        self.client = Client()
+        courses = [Course(
+                course_code=f"TEST {i:04d}",
+                course_name=f"WoooooHOoooo {i}",
+                course_faculty="Science" if i % 2 == 0 else "Engineering"
+            )
+            for i in range(1, 5001)
+        ]
+        Course.objects.bulk_create(courses)
+
+    def test_search_latency(self):
+   
+        start_time = time.perf_counter()
+
+        response = self.client.get(reverse('search'), {'q': 'CS', 'faculty': 'Science'})
+
+        response_time = time.perf_counter() - start_time
+
+        self.assertEqual(response.status_code, 200)
+        self.assertLess(response_time, 1.0)
+
+    def test_filter_latency(self):
+        start_time = time.perf_counter()
+
+        response = self.client.get(reverse('search'), {'faculty': 'Science'})
+
+        response_time = time.perf_counter() - start_time
+
+        self.assertEqual(response.status_code, 200)
+        self.assertLess(response_time, 1.0)
+
 
 
 class Test_pricing(TestCase):
@@ -101,3 +136,5 @@ class Test_pricing(TestCase):
         with self.assertRaises(ValueError) as ctx:
             custom_pricing('xxx')
         self.assertIn("Price must be a valid number", str(ctx.exception))
+     
+        
