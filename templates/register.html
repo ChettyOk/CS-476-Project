@@ -1,0 +1,148 @@
+{% extends "base.html" %} {% load static %} {% block title %}Create your account
+· {{ site_name|default:"tUtoR"}}{% endblock %} {% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/auth.css' %}" />
+{% endblock %} {% block content %}
+<section class="auth-shell">
+  <aside class="auth-aside">
+    <div class="auth-aside-inner">
+      <img
+        class="auth-logo"
+        src="{% static 'img/tutor-logo-light.svg' %}"
+        alt=""
+        width="210"
+        height="66"
+      />
+      <p class="auth-kicker">{{ campus|default:"University of Regina" }}</p>
+      <p class="auth-aside-title">
+        Find a tutor who has already passed your course.
+      </p>
+      <div class="auth-aside-extra">
+        <p>
+          One account is enough to see free hours and book a session. Tutors set
+          their own schedules and price.
+        </p>
+        <ul>
+          <li>Pick student or tutor now, or decide later.</li>
+          <li>Switch roles any time from your account page.</li>
+        </ul>
+      </div>
+    </div>
+  </aside>
+
+  <div class="auth-main">
+    <div class="auth-card">
+      <h1>Create your account</h1>
+      <p class="auth-sub">
+        Already have one? <a href="{% url 'login' %}">Sign in</a>
+      </p>
+
+      {% if form.non_field_errors %}
+      <div class="alert alert-danger" role="alert">
+        {% for error in form.non_field_errors %}{{ error }} {% endfor %}
+      </div>
+      {% endif %}
+      <form
+        method="POST"
+        action=""
+        id="register-form"
+        class="needs-validation"
+        novalidate
+      >
+        {% csrf_token %}
+
+       
+        <div class="row g-3">
+          <div class="col-sm-6">
+            <label for="id_first_name" class="form-label">First name</label>
+            <input type="text" id="id_first_name" name="first_name"
+                   class="form-control{% if form.first_name.errors %} is-invalid{% endif %}"
+                   value="{{ form.first_name.value|default:'' }}"
+                   autocomplete="given-name" maxlength="150" required>
+            <div class="invalid-feedback">{% for error in form.first_name.errors %}{{ error }} {% empty %}Enter your first name.{% endfor %}</div>
+          </div>
+
+          <div class="col-sm-6">
+            <label for="id_last_name" class="form-label">Last name</label>
+            <input type="text" id="id_last_name" name="last_name"
+                   class="form-control{% if form.last_name.errors %} is-invalid{% endif %}"
+                   value="{{ form.last_name.value|default:'' }}"
+                   autocomplete="family-name" maxlength="150" required>
+            <div class="invalid-feedback">{% for error in form.last_name.errors %}{{ error }} {% empty %}Enter your last name.{% endfor %}</div>
+          </div>
+
+          <div class="col-12">
+            <label for="id_email" class="form-label">Email</label>
+            <input type="email" id="id_email" name="email"
+                   class="form-control{% if form.email.errors %} is-invalid{% endif %}"
+                   value="{{ form.email.value|default:'' }}"
+                   autocomplete="email" maxlength="254" required>
+            <div class="invalid-feedback">{% for error in form.email.errors %}{{ error }} {% empty %}Enter a valid email address, like name@example.com.{% endfor %}</div>
+          </div>
+
+          <div class="col-12">
+            <label for="id_password1" class="form-label">Create password</label>
+            <div class="input-group has-validation">
+              <input type="password" id="id_password1" name="password1"
+                     class="form-control{% if form.password1.errors %} is-invalid{% endif %}"
+                     autocomplete="new-password" minlength="8" required
+                     aria-describedby="password-help">
+              <button type="button" class="btn auth-toggle" data-toggle-password="#id_password1" aria-pressed="false">Show</button>
+              <div class="invalid-feedback">{% for error in form.password1.errors %}{{ error }} {% empty %}Use at least 8 characters.{% endfor %}</div>
+            </div>
+            <div id="password-help" class="form-text">At least 8 characters. Avoid common passwords and all-number passwords.</div>
+          </div>
+
+          <div class="col-12">
+            <label for="id_password2" class="form-label">Confirm password</label>
+            <div class="input-group has-validation">
+              <input type="password" id="id_password2" name="password2"
+                     class="form-control{% if form.password2.errors %} is-invalid{% endif %}"
+                     autocomplete="new-password" required
+                     data-match="#id_password1" data-mismatch="The two passwords do not match.">
+              <button type="button" class="btn auth-toggle" data-toggle-password="#id_password2" aria-pressed="false">Show</button>
+              <div class="invalid-feedback">{% for error in form.password2.errors %}{{ error }} {% empty %}Re-enter your password.{% endfor %}</div>
+            </div>
+          </div>
+        </div>
+
+        <fieldset class="mt-4">
+          <legend>How will you use tUtoR? <span class="text-muted fw-normal">(optional)</span></legend>
+          <div class="role-grid">
+            <div class="role-option">
+              <input class="role-input" type="radio" name="role" id="role-student" value="student"{% if form.role.value == 'student' %} checked{% endif %}>
+              <label class="role-card" for="role-student">
+                <strong>Student</strong>
+                <span>Find a tutor for my courses</span>
+              </label>
+            </div>
+            <div class="role-option">
+              <input class="role-input" type="radio" name="role" id="role-tutor" value="tutor"{% if form.role.value == 'tutor' %} checked{% endif %}>
+              <label class="role-card" for="role-tutor">
+                <strong>Tutor</strong>
+                <span>Offer sessions for courses I passed</span>
+              </label>
+            </div>
+            <div class="role-option">
+              <input class="role-input" type="radio" name="role" id="role-later" value=""{% if not form.role.value %} checked{% endif %}>
+              <label class="role-card" for="role-later">
+                <strong>Decide later</strong>
+                <span>You can switch at any time</span>
+              </label>
+            </div>
+          </div>
+          {% if form.role.errors %}
+          <div class="text-danger small mt-2">{% for error in form.role.errors %}{{ error }} {% endfor %}</div>
+          {% endif %}
+        </fieldset>
+
+        <button type="submit" class="btn btn-green rounded-pill w-100 mt-4" data-loading="Creating account…">Create account</button>
+      </form>
+    </div>
+  </div>
+
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'js/auth.js' %}"></script>
+{% endblock %}

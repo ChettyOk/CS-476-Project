@@ -15,12 +15,43 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.contrib.auth import views as auth_views
+from django.urls import path, reverse_lazy
 from django.urls import path
 
+from accounts.views import (
+    login,
+    logout,
+    register,
+    request_forgotten_password,
+)
 from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('', include('bookings.urls')),
     path('', views.landing, name='landing'),
     path('login/', views.login, name='login'),
+    path('logout/', logout, name='logout'),
+    path('register/', register, name='register'),
+    path('password-reset/', request_forgotten_password, name='request_forgotten_password'),
+    path(
+    'password-reset/confirm/<uidb64>/<token>/',
+    auth_views.PasswordResetConfirmView.as_view(
+        template_name='registration/password_reset_confirm.html',
+        success_url=reverse_lazy('password_reset_complete'),
+    ),
+    name='password_reset_confirm',
+),
+path(
+    'password-reset/complete/',
+    auth_views.PasswordResetCompleteView.as_view(
+        template_name='registration/password_reset_complete.html',
+    ),
+    name='password_reset_complete',
+),
+    
 ]
+
+
+
