@@ -14,9 +14,9 @@ from django.core.validators import validate_email
 from django.db.models.functions import Lower
 
 class Course(models.Model):
-    course_code = models.CharField(max_length=10, unique=True)
-    course_name = models.CharField(max_length=200)
-    course_faculty = models.CharField(max_length=50)
+    course_code = models.CharField(max_length=10, unique=True, db_index=True)
+    course_name = models.CharField(max_length=200, db_index=True)
+    course_faculty = models.CharField(max_length=50, db_index=True)
 
     FACULTIES = FACULTIES
 

@@ -1,10 +1,15 @@
 from django.test import TestCase
 from .models import Course
+from django.urls import reverse
 from django.db import IntegrityError, transaction
+from django.core import mail
+from django.test import override_settings
+from urllib.parse import urlsplit
 
 # user import
 from django.test import SimpleTestCase, TestCase
 from accounts.models import User, UserManager, StudentProfile
+from .models import User
 
 # courses tests
 class test_course(TestCase):
@@ -252,3 +257,165 @@ class test_Student_Profile(TestCase):
             self.profile.update_profile(major="ENER", semester=0)
         with self.assertRaises(ValueError):
             self.profile.update_profile(major="ENER", semester=-1)
+class RegisterViewTests(TestCase):
+    def test_register_creates_user(self):
+        response = self.client.post(reverse("register"), {
+            "email": "new@example.com",
+            "password": "testpass123",
+        })
+
+        self.assertEqual(response.status_code, 201)
+        user = User.objects.get(email="new@example.com")
+        self.assertTrue(user.check_password("testpass123"))
+
+    def test_register_rejects_invalid_email(self):
+        response = self.client.post(reverse("register"), {
+            "email": "not-an-email",
+            "password": "testpass123",
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("email", response.json()["errors"])
+
+    def test_register_rejects_short_password(self):
+        response = self.client.post(reverse("register"), {
+            "email": "new@example.com",
+            "password": "short",
+        })
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("password", response.json()["errors"])
+
+    def test_register_rejects_duplicate_email(self):
+        User.objects.create_user(
+            email="existing@example.com",
+            password="testpass123",
+        )
+
+        response = self.client.post(reverse("register"), {
+            "email": "EXISTING@example.com",
+            "password": "anotherpass123",
+        })
+
+        self.assertEqual(response.status_code, 409)
+
+class AuthenticationViewTests(TestCase):
+    def setUp(self):
+        self.password = "testpass123"
+        self.user = User.objects.create_user(
+            email="test@example.com",
+            password=self.password,
+        )
+
+    def test_login_creates_authenticated_session(self):
+        response = self.client.post(reverse("login"), {
+            "email": "test@example.com",
+            "password": self.password,
+        })
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            self.client.session.get("_auth_user_id"),
+            str(self.user.pk),
+        )
+
+    def test_login_rejects_invalid_password(self):
+        response = self.client.post(reverse("login"), {
+            "email": "test@example.com",
+            "password": "wrongpass123",
+        })
+
+        self.assertEqual(response.status_code, 401)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+    def test_logout_clears_authenticated_session(self):
+        self.client.force_login(self.user)
+
+        response = self.client.post(reverse("logout"))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertNotIn("_auth_user_id", self.client.session)
+
+class PasswordResetFlowTests(TestCase):
+    def setUp(self):
+        self.old_password = "Original-Password-928!"
+        self.user = User.objects.create_user(
+            email="reset@example.com",
+            password=self.old_password,
+        )
+
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"
+    )
+    def test_request_sends_email_and_reset_link_changes_password(self):
+        response = self.client.post(
+            reverse("request_forgotten_password"),
+            {"email": self.user.email},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(mail.outbox), 1)
+
+        email_body = mail.outbox[0].body
+        reset_url = next(
+            line for line in email_body.splitlines()
+            if "/password-reset/confirm/" in line
+        )
+        reset_path = urlsplit(reset_url).path
+
+        # The first visit validates the token and redirects to a clean URL.
+        response = self.client.get(reset_path, follow=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(
+            response,
+            "registration/password_reset_confirm.html",
+        )
+
+        confirm_path = urlsplit(response.redirect_chain[-1][0]).path
+        new_password = "Brand-New-Password-837!"
+
+        response = self.client.post(
+            confirm_path,
+            {
+                "new_password1": new_password,
+                "new_password2": new_password,
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(
+            response,
+            "registration/password_reset_complete.html",
+        )
+
+        self.user.refresh_from_db()
+        self.assertTrue(self.user.check_password(new_password))
+        self.assertFalse(self.user.check_password(self.old_password))
+
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend"
+    )
+    def test_unknown_email_gets_same_response_without_sending_email(self):
+        response = self.client.post(
+            reverse("request_forgotten_password"),
+            {"email": "unknown@example.com"},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(len(mail.outbox), 0)
+
+    def test_invalid_reset_token_shows_invalid_link_message(self):
+        response = self.client.get(
+            reverse(
+                "password_reset_confirm",
+                kwargs={"uidb64": "invalid", "token": "invalid"},
+            )
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(
+            response,
+            "This password reset link is invalid or has expired.",
+        )
+
