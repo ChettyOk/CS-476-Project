@@ -12,7 +12,7 @@ class Booking(models.Model):
 
     course = models.ForeignKey(Course, on_delete=models.SET_NULL, null=True, blank=True, related_name='course_bookings')
 
-    # uncomment as soon as Available_slots is implemented
+    # ----- uncomment as soon as Available_slots is implemented -----
     # time_slot = models.ForeignKey('Available_Slots', on_delete=models.PROTECT, related_name='bookings') 
 
     student_note = models.CharField(max_length=255, blank=True, default='')
