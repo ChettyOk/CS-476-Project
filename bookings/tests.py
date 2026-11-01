@@ -15,6 +15,8 @@ User = get_user_model()
 
 from unittest.mock import MagicMock
 from bookings.services import create_booking_request, get_user_bookings, DoubleBookingError
+import threading
+from django.db import connection
 
 class test_filter_courses_system(TestCase):
     
@@ -216,6 +218,7 @@ class Test_Booking_Model(TestCase):
 class Test_create_booking(TestCase):
     def setUp(self):
         self.student = User.objects.create_user(email="student@uregina.ca", password="67676767!jffhH")
+        self.student2 = User.objects.create_user(email="student2@uregina.ca", password="676767jjJJ!")
         self.tutor = User.objects.create_user(email="tutor@uregina.ca", password="67676767!jffhH")
         self.course1 = Course.create_course("ENER 202", "Energy")
         self.course2 = Course.create_course("CS 476", "SW-Project")
@@ -264,3 +267,36 @@ class Test_create_booking(TestCase):
         self.assertEqual(user_bookings['tutor_bookings'].count(), 1)
         self.assertEqual(user_bookings['all_bookings'].count(), 3)
         self.assertEqual(user_bookings['tutor_bookings'].first().course, self.course3)
+
+    # uncomment once available_slots becomes available
+    # def test_simultaneous_booking(self):
+    #     slot = Available_Slots.objects.create(
+    #         tutor=self.tutor,
+    #         status='available',
+    #         price_per_hour=Decimal('20.00'),
+    #         start_time=datetime(2026, 11, 1, 14, 0, 0),
+    #         end_time=datetime(2026, 11, 1, 15, 0, 0))
+    
+    #     results = []
+    #     errors = []
+    
+    #     barrier = threading.Barrier(2)
+    #     def book_slot(user):
+    #         connection.close()
+    #         barrier.wait()
+    #         try:
+    #             b = create_booking_request(student=user, tutor=self.tutor, slot=slot)
+    #             results.append(b)
+    #         except DoubleBookingError as e:
+    #             errors.append(e)
+    
+    #     t1 = threading.Thread(target=book_slot, args=(self.student,))
+    #     t2 = threading.Thread(target=book_slot, args=(self.student2,))
+    
+    #     t1.start()
+    #     t2.start()
+    #     t1.join()
+    #     t2.join()
+
+    #     self.assertEqual(len(results), 1)
+    #     self.assertEqual(len(errors), 1)
