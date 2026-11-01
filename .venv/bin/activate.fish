@@ -33,7 +33,7 @@ end
 # Unset irrelevant variables.
 deactivate nondestructive
 
-set -gx VIRTUAL_ENV "/Users/cheta/Main Project/Projects/tUtoR/.venv"
+set -gx VIRTUAL_ENV "/Users/cheta/.Trash/tUtoR 14-35-48-506/.venv"
 
 set -gx _OLD_VIRTUAL_PATH $PATH
 set -gx PATH "$VIRTUAL_ENV/bin" $PATH
