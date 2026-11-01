@@ -11,7 +11,6 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 from django.contrib.auth import get_user_model
 from bookings.models import Booking
-User = get_user_model()
 
 from unittest.mock import MagicMock
 from bookings.services import create_booking_request, get_user_bookings, DoubleBookingError
@@ -147,7 +146,8 @@ class Test_pricing(TestCase):
             custom_pricing('xxx')
         self.assertIn("Price must be a valid number", str(ctx.exception))
         
-class Test_Booking_Model(TestCase):
+User = get_user_model()      
+class test_booking_model(TestCase):
     def setUp(self):
         self.student = User.objects.create_user(email="student@uregina.ca", password="6767677jd!")
         self.tutor = User.objects.create_user(email="tutor@uregina.ca", password="6767677jd!")
@@ -215,7 +215,7 @@ class Test_Booking_Model(TestCase):
         booking = self.create_booking()
         booking.unblock_booking()  
 
-class Test_create_booking(TestCase):
+class test_create_booking(TestCase):
     def setUp(self):
         self.student = User.objects.create_user(email="student@uregina.ca", password="67676767!jffhH")
         self.student2 = User.objects.create_user(email="student2@uregina.ca", password="676767jjJJ!")
